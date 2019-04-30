@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yagamic.base.infrastructure.mybatis.mapper.AccountMapper">
+    <resultMap id="BasicMap" type="com.yagamic.base.domain.account.model.Account"></resultMap>
+    <resultMap id="BasicDetailMap" type="com.yagamic.base.domain.account.model.AccountDetail"></resultMap>
+    <resultMap id="OrgAccountMap" type="com.yagamic.base.domain.account.model.OrganizationAccount"></resultMap>
+
+    <insert id="addAccount" parameterType="com.yagamic.base.domain.account.model.Account">
+        insert into account
+        (create_date,update_date,admin,area,email,enable,password,username,real_name,user_profile_id)
+        values
+        (#{createDate},#{updateDate},#{admin},#{area},#{email}
+        ,#{enable},#{password},#{username},#{realName},#{userProfileId})
+    </insert>
+    <select id="findByUsername" parameterType="map" resultMap="BasicMap">
+        select * from account
+        where
+        enable=1
+        and binary username = #{username,jdbcType=VARCHAR}
+
+    </select>
+    <select id="findByCompanyNameAndName" parameterType="map" resultType="java.lang.String">
+SELECT
+	a.username
+FROM
+	account a
+LEFT JOIN user_profile up ON up.id = a.user_profile_id
+WHERE up.company = #{company} AND up.real_name = #{name}
+    </select>
+    <select id="findAllCustomer" parameterType="map" resultMap="BasicMap">
+        select * from account
+        where
+        1=1
+        <if test="username!=null">
+            and username like CONCAT('%',#{username,jdbcType=VARCHAR},'%')
+        </if>
+
+        ORDER BY create_date asc
+        limit #{offset,jdbcType=INTEGER},#{size,jdbcType=INTEGER}
+    </select>
+    <select id="findOrganizationAccountCount" resultType="java.lang.Integer">
+        SELECT
+        count(a.id)
+        FROM
+        account a
+        LEFT JOIN authority au ON a.username = au.username
+        LEFT JOIN authority_roles ar ON ar.id = au.role_id
+        LEFT JOIN user_profile up ON up.id = a.user_profile_id
+        LEFT JOIN organization_info oi ON oi.`name` = up.company
+        LEFT JOIN city_info ci ON ci.id = oi.city_id
+        WHERE
+        1 = 1
+        AND 4 > ar.role_level
+        <if test="keyword != null">
+            AND
+            ( a.username LIKE concat('%',#{keyword},'%')
+            OR ci.`name` LIKE concat('%',#{keyword},'%')
+            OR oi.county LIKE concat('%',#{keyword},'%') )
+        </if>
+    </select>
+    <select id="findOrganizationAccount" parameterType="map" resultMap="OrgAccountMap">
+        SELECT
+        a.id id,
+        a.username account,
+        ci.`name` city,
+        oi.is_city isCity,
+        oi.county county,
+        ar.role_level type,
+        ar.id roleId,
+        up.real_name people,
+        up.department department,
+        up.job_position job,
+        up.phone phone ,
+        a.enable enable
+        FROM
+        account a
+        LEFT JOIN authority au ON a.username = au.username
+        LEFT JOIN authority_roles ar ON ar.id = au.role_id
+        LEFT JOIN user_profile up ON up.id = a.user_profile_id
+        LEFT JOIN organization_info oi ON oi.`name` = up.company
+        LEFT JOIN city_info ci ON ci.id = oi.city_id
+        WHERE
+        1=1 AND 4 > ar.role_level
+        <if test="keyword != null">
+            AND
+            ( a.username LIKE concat('%',#{keyword},'%')
+            OR ci.`name` LIKE concat('%',#{keyword},'%')
+            OR oi.county LIKE concat('%',#{keyword},'%') )
+        </if>
+        ORDER BY a.update_date desc
+        LIMIT #{offset,jdbcType=INTEGER}, #{size,jdbcType=INTEGER}
+    </select>
+
+    <select id="findDetailById" parameterType="map" resultMap="BasicDetailMap">
+        SELECT
+        a.id,
+        a.username,
+        oi.county,
+        ci.`name` city,
+        au.role_id,
+        a.user_profile_id,
+        u.real_name person,
+        u.phone,
+        u.job_position,
+        u.department
+        FROM
+        account a
+        LEFT JOIN user_profile u ON u.id = a.user_profile_id
+        LEFT JOIN authority au ON au.username = a.username
+        LEFT JOIN organization_info oi ON oi.`name` = u.company
+        LEFT JOIN city_info ci ON ci.id = oi.city_id
+        WHERE
+        a.id = #{id}
+    </select>
+    <select id="findCompanyByUsername" resultType="java.lang.String">
+        select u.company from account a LEFT JOIN user_profile u ON u.id = a.user_profile_id WHERE a.username = #{name}
+    </select>
+    <select id="findRealNameByUsername" resultType="java.lang.String">
+        select u.real_name from account a LEFT JOIN user_profile u ON u.id = a.user_profile_id WHERE a.username = #{name}
+    </select>
+    <select id="findImAccounts" resultMap="BasicMap">
+        select a.username,up.company,up.real_name nickname FROM account a LEFT JOIN user_profile up ON up.id = a.user_profile_id
+    </select>
+</mapper>

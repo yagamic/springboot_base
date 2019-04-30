@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yagamic.base.infrastructure.mybatis.mapper.AuthorityRolesMapper">
+    <resultMap id="BasicMap" type="com.yagamic.base.domain.authority.model.AuthorityRoles"></resultMap>
+
+
+    <select id="findRoles" parameterType="map" resultMap="BasicMap">
+        SELECT
+        aur.id,
+        aur.parent_role_id,
+        aur.role_name,
+        aur.role_description,
+        aur.role_level,
+        aur.role_level_index,
+        aur.create_date,
+        aur.update_date,
+        (SELECT
+			count(distinct up.company)
+		FROM
+			authority au
+		LEFT JOIN authority_roles ar ON au.role_id = ar.id
+		LEFT JOIN account a ON a.username = au.username
+		LEFT JOIN user_profile up ON up.id = a.user_profile_id
+		WHERE
+			ar.id = aur.id ) roleCount
+        FROM
+        authority_roles aur
+        ORDER BY create_date ASC
+    </select>
+
+
+</mapper>

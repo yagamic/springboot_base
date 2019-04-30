@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yagamic.base.infrastructure.mybatis.mapper.AuthorityPrivilegeMapper">
+    <resultMap id="BasicMap" type="com.yagamic.base.domain.authority.model.AuthorityPrivilege"></resultMap>
+    <resultMap id="detailsMap" type="com.yagamic.base.domain.authority.model.AuthorityPrivilege"></resultMap>
+    <resultMap id="ChildrenMap" type="com.yagamic.base.domain.authority.model.AuthorityPrivilegeChildren"></resultMap>
+
+
+    <select id="findAll" parameterType="map" resultMap="BasicMap">
+        select * from account
+        where
+        is_delete = 0
+        <if test="username!=null">
+            and username like CONCAT('%',#{username,jdbcType=VARCHAR},'%')
+        </if>
+
+        ORDER BY create_date asc
+    </select>
+    <select id="findAllParentPrivilege" parameterType="map" resultMap="BasicMap">
+        select * FROM
+        authority_privilege
+        WHERE
+        parent_privilege_id =0
+        ORDER BY id ASC
+    </select>
+    <select id="findRolePrivilege" parameterType="map" resultMap="BasicMap">
+
+        SELECT  * from authority_privilege ap
+        LEFT JOIN authority_role_privilege arp ON ap.id = arp.privilege_id
+        WHERE arp.role_id = #{id}
+        ORDER  BY ap.create_date
+    </select>
+    <select id="findAuthorityPrivilegeByParentPrivilegeId" parameterType="map" resultMap="ChildrenMap">
+
+        SELECT  ap.id,ap.privilege_name childrenPrivilegeName ,ap.privilege_description childrenPrivilegeDescription ,ap.enable  from authority_privilege ap
+        WHERE ap.parent_privilege_id = #{id}
+        ORDER  BY ap.create_date
+    </select>
+    <select id="findEnableAuthorityPrivilegeByParentPrivilegeId" parameterType="map" resultMap="ChildrenMap">
+
+        SELECT  ap.id,ap.parent_privilege_id parentPrivilegeId,ap.privilege_name childrenPrivilegeName ,ap.privilege_description childrenPrivilegeDescription ,ap.enable  from authority_privilege ap
+        WHERE ap.parent_privilege_id = #{id} AND ap.enable = 1
+        ORDER  BY ap.create_date
+    </select>
+    <select id="findCheckPrivilege" parameterType="map" resultType="java.lang.Integer">
+        SELECT privilege_id FROM authority_role_privilege where role_id =#{id}
+
+    </select>
+
+</mapper>
