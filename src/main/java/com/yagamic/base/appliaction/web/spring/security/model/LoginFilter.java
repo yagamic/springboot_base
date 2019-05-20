@@ -33,7 +33,7 @@ public class LoginFilter extends AbstractAuthenticationProcessingFilter {
         LoginInput input = mapper.readValue(reader, LoginInput.class);
         String username = input.getUsername();
         String password = input.getPassword();
-        Boolean remember = input.getRemember();
+        Boolean remember = input.getAutoLogin();
 
            System.out.println(username + "--------" + password);
         if (username == null) {

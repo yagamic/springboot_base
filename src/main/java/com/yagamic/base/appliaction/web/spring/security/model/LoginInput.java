@@ -10,6 +10,7 @@ import lombok.Setter;
 public class LoginInput {
     String username;
     String password;
-    Boolean remember = false;
+    Boolean autoLogin = false;
+    String type;
 //    String captcha;
 }
